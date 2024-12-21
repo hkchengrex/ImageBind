@@ -1,3 +1,11 @@
+This is a fork of the original ImageBind repository. Changes are:
+- Relaxed PyTorch version requirements to support newer versions
+- Fixed several deprecation warnings
+- Changed the model download path to ~/.cache/torch/hub/checkpoints
+- Used pyproject.toml rather than setup.py 
+----------------
+
+
 # ImageBind: One Embedding Space To Bind Them All
 
 **[FAIR, Meta AI](https://ai.facebook.com/research/)** 

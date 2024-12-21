@@ -7,6 +7,7 @@
 
 
 import os
+from pathlib import Path
 from functools import partial
 from types import SimpleNamespace
 
@@ -490,17 +491,18 @@ def imagebind_huge(pretrained=False):
     )
 
     if pretrained:
-        if not os.path.exists(".checkpoints/imagebind_huge.pth"):
+        cache_path = Path("~/.cache/torch/hub/checkpoints/imagebind_huge.pth").expanduser()
+        if not cache_path.exists():
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
             print(
-                "Downloading imagebind weights to .checkpoints/imagebind_huge.pth ..."
+                f"Downloading imagebind weights to {cache_path}..."
             )
-            os.makedirs(".checkpoints", exist_ok=True)
             torch.hub.download_url_to_file(
                 "https://dl.fbaipublicfiles.com/imagebind/imagebind_huge.pth",
-                ".checkpoints/imagebind_huge.pth",
+                cache_path,
                 progress=True,
             )
 
-        model.load_state_dict(torch.load(".checkpoints/imagebind_huge.pth"))
+        model.load_state_dict(torch.load(cache_path, weights_only=True))
 
     return model

@@ -17,12 +17,52 @@ from pytorchvideo import transforms as pv_transforms
 from pytorchvideo.data.clip_sampling import ConstantClipsPerVideoSampler
 from pytorchvideo.data.encoded_video import EncodedVideo
 from torchvision import transforms
-from torchvision.transforms._transforms_video import NormalizeVideo
 
 from imagebind.models.multimodal_preprocessors import SimpleTokenizer
 
 DEFAULT_AUDIO_FRAME_SHIFT_MS = 10  # in milliseconds
 
+def normalize(clip, mean, std, inplace=False):
+    """
+    Args:
+        clip (torch.tensor): Video clip to be normalized. Size is (C, T, H, W)
+        mean (tuple): pixel RGB mean. Size is (3)
+        std (tuple): pixel standard deviation. Size is (3)
+    Returns:
+        normalized clip (torch.tensor): Size is (C, T, H, W)
+    """
+    if not len(clip.shape) == 4:
+        raise ValueError("clip should be a 4D torch.tensor")
+    if not inplace:
+        clip = clip.clone()
+    mean = torch.as_tensor(mean, dtype=clip.dtype, device=clip.device)
+    std = torch.as_tensor(std, dtype=clip.dtype, device=clip.device)
+    clip.sub_(mean[:, None, None, None]).div_(std[:, None, None, None])
+    return clip
+
+class NormalizeVideo:
+    """
+    Normalize the video clip by mean subtraction and division by standard deviation
+    Args:
+        mean (3-tuple): pixel RGB mean
+        std (3-tuple): pixel RGB standard deviation
+        inplace (boolean): whether do in-place normalization
+    """
+
+    def __init__(self, mean, std, inplace=False):
+        self.mean = mean
+        self.std = std
+        self.inplace = inplace
+
+    def __call__(self, clip):
+        """
+        Args:
+            clip (torch.tensor): video clip to be normalized. Size is (C, T, H, W)
+        """
+        return normalize(clip, self.mean, self.std, self.inplace)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(mean={self.mean}, std={self.std}, inplace={self.inplace})"
 
 def return_bpe_path():
     return pkg_resources.resource_filename(
